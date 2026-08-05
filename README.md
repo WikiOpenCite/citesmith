@@ -3,21 +3,16 @@ SPDX-FileCopyrightText: 2025 The University of St Andrews
 SPDX-License-Identifier: CC-BY-SA-4.0
 -->
 
-# Template
+# Citescoop Toolforge
 
-This is the template repository for all new WikiOpenCite repos.
+This repo contains the toolforge tool associated with citescoop.
 
-Here is a list of things you need to do to get started
+The tool does the following:
 
-- Update this README
-- Update `BUILDING.md`
-- Update `CONTRIBUTING.md`
-- Update `REUSE.toml` and add required licenses
-- Create a build system (if required)
-- Update `.gitignore` to match your codebase
-- Update dependabot
-- Update GitHub workflows
-- Update pre-commit runs
+- Watches for new dump files, when they exist publishes them
+- Provides a web service to track the current progress of dump
+  processing
+- Provides a web service to download the resulting dump files
 
 ## Building and installing
 
