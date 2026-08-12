@@ -14,7 +14,7 @@ def valid_config_file(tmp_path: str) -> str:
 
     target_output = os.path.join(tmp_path, "config.toml")
     with open(target_output, "w+", encoding="utf-8") as f:
-        text = f"""
+        text = """
 [database]
 type = "sqlite"
 """
