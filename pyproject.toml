@@ -1,0 +1,50 @@
+# SPDX-FileCopyrightText: 2026 The University of St Andrews
+# SPDX-License-Identifier: GPL-3.0-or-later
+
+[project]
+name = "citesmith"
+version = "0.1.0"
+description = "The processing workflow that uses citescoop to extract citations and build datasets"
+authors = [
+    {name = "Zoe Nickson",email = "mjn6@st-andrews.ac.uk"}
+]
+readme = "README.md"
+requires-python = ">=3.14"
+dependencies = [
+    "click (>=8.4.2,<9.0.0)",
+    "fastapi[standard] (>=0.141.1,<0.142.0)",
+    "pydantic (>=2.13.4,<3.0.0)"
+]
+
+
+[build-system]
+requires = ["poetry-core>=2.0.0,<3.0.0"]
+build-backend = "poetry.core.masonry.api"
+
+[dependency-groups]
+dev = [
+    "pytest (>=9.1.1,<10.0.0)",
+    "httpx (>=0.28.1,<0.29.0)",
+    "pylint (>=4.0.7,<5.0.0)",
+    "pytest-cov (>=7.1.0,<8.0.0)",
+    "pytest-mock (>=3.15.1,<4.0.0)"
+]
+
+[tool.poetry]
+packages = [
+    { include = "citesmith", from = "src" },
+]
+
+[tool.pytest.ini_options]
+pythonpath = [
+  "."
+]
+addopts = "--cov --cov-branch --cov-report term-missing"
+
+[tool.codespell]
+skip = 'poetry.lock'
+count = true
+quiet-level = 3
+
+[tool.pylint]
+init-hook='import sys; sys.path.append(".")'

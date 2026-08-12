@@ -1,4 +1,4 @@
 version = 1
-SPDX-PackageName = "citescoop-toolforge"
+SPDX-PackageName = "citesmith"
 SPDX-PackageSupplier = "The University of St Andrews"
 annotations = []
