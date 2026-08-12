@@ -9,6 +9,9 @@ jobs:
   test:
     name: Run tests and collect coverage
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ["3.14"]
     steps:
       - uses: actions/checkout@v6
       - name: Set up Python ${{ matrix.python-version }}
