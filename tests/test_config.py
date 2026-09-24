@@ -122,3 +122,14 @@ def test_path_is_cached(
     mock_exists.assert_called_once()
     config_manager.path
     mock_exists.assert_called_once()
+
+
+def test_path_manual_set(
+    config_manager: ConfigManager, valid_config_file: str, mocker: MockerFixture
+) -> None:
+    """The path of the config file should be cached"""
+    mock_exists = mocker.patch("os.path.exists", wrap=os.path.exists)
+
+    config_manager.path = valid_config_file
+    assert config_manager.path == valid_config_file
+    mock_exists.assert_not_called()

@@ -14,21 +14,55 @@ from typing import Literal
 import tomllib
 import logging
 
-from pydantic import BaseModel, Field, ValidationError
+from pydantic import BaseModel, DirectoryPath, Field, ValidationError
 
 logger = logging.getLogger(__name__)
 
 
-class SQLiteConfig(BaseModel):
-    """Pydantic model for SQLite config"""
+class MariaDBConfig(BaseModel):
+    """Pydantic model for MariaDB config"""
 
-    type: Literal["sqlite"]
+    type: Literal["mariadb"]
+    host: str
+    port: int
+    user: str
+    password: str
+    database: str
+    min_pool_size: int = 5
+    max_pool_size: int = 20
+    max_idle_time: float = 600.0  # in seconds
+    max_lifetime: float = 3600.0  # in seconds
+    ping_threshold: float = 0.25  # in seconds
+    enable_health_check: bool = True
+
+
+class DumpsConfig(BaseModel):
+    """Pydantic model for Dumps config"""
+
+    root_dir: DirectoryPath
+
+
+class WorkerConfig(BaseModel):
+    """Pydantic model for worker config"""
+
+    sleep_time: int = 60  # in seconds
+    out_base_dir: DirectoryPath
+    citescoop_path: str
+
+
+class WebConfig(BaseModel):
+    """Pydantic model for web config"""
+
+    dump_path: DirectoryPath
 
 
 class Config(BaseModel):
     """Pydantic model for config file"""
 
-    database: SQLiteConfig = Field(..., discriminator="type")
+    database: MariaDBConfig = Field(..., discriminator="type")
+    dumps: DumpsConfig
+    worker: WorkerConfig
+    web: WebConfig
 
 
 class ConfigError(Exception):
@@ -57,7 +91,7 @@ class ConfigManager:
     """
 
     def __init__(self) -> None:
-        self.lookup_paths = ["./", "/etc/finance-manager/"]
+        self.lookup_paths = ["./", "/etc/citesmith/"]
         self._config: Config | None = None
         self._path: str | None = None
 
@@ -112,12 +146,25 @@ class ConfigManager:
             return self._path
 
         for path in self.lookup_paths:
+            logger.debug("Searching for config file in %s", path)
             path = os.path.join(path, "config.toml")
             if os.path.exists(path):
                 self._path = path
+                logger.debug("Found config file at %s", path)
                 return path
 
         raise ConfigNotFoundError("Could not find configuration file on search paths")
+
+    @path.setter
+    def path(self, value: str) -> None:
+        """
+        Set the path to the configuration file
+
+        Args:
+            value: Path to configuration file
+        """
+
+        self._path = value
 
     @property
     def config(self) -> Config:

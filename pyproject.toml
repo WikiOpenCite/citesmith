@@ -13,7 +13,9 @@ requires-python = ">=3.14"
 dependencies = [
     "click (>=8.4.2,<9.0.0)",
     "fastapi[standard] (>=0.141.1,<0.142.0)",
-    "pydantic (>=2.13.4,<3.0.0)"
+    "pydantic (>=2.13.4,<3.0.0)",
+    "mariadb[binary,pool] (>=2.0.0rc2,<3.0.0)",
+    "tabulate (>=0.10.0,<0.11.0)",
 ]
 
 
@@ -35,6 +37,8 @@ packages = [
     { include = "citesmith", from = "src" },
 ]
 
+[tool.poetry.dependencies]
+mariadb = {allow-prereleases = true}
 [tool.pytest.ini_options]
 pythonpath = [
   "."
