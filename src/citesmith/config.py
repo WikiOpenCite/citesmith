@@ -54,6 +54,7 @@ class WebConfig(BaseModel):
     """Pydantic model for web config"""
 
     dump_path: DirectoryPath
+    static_base_url: str
 
 
 class Config(BaseModel):

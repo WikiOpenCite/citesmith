@@ -16,6 +16,7 @@ from citesmith.publisher import run_publisher, run_publisher_singleshot
 from citesmith.watcher import run_watcher_singleshot
 from citesmith.processor import run_processor_singleshot, run_processor
 from citesmith.combiner import run_combiner_singleshot, run_combiner
+from citesmith.web.web import app
 
 
 @click.version_option(prog_name="citesmith")
@@ -61,12 +62,6 @@ def cli(config: click.Path, log_level: str):
             raise click.ClickException(str(e)) from e
 
         create_pool(build_from_config(manager.config.database))
-
-
-@cli.command()
-def serve():
-    """Start citesmith API"""
-    click.echo("Not implemented")
 
 
 @cli.command()
@@ -142,6 +137,15 @@ def publish(singleshot: bool):
         run_publisher_singleshot()
     else:
         run_publisher()
+
+
+@cli.command()
+@click.option("--host", default="0.0.0.0")
+@click.option("--port", default=5000, type=int)
+def serve(host: str, port: int):
+    """Start the development web interface for citesmith"""
+
+    app.run(host=host, port=port)
 
 
 @cli.group()
