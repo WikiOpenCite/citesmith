@@ -89,6 +89,88 @@ SPDX-License-Identifier: GPL-3.0-or-later
         color: var(--text-dim);
       }
 
+      /* ---------- filter bar ---------- */
+
+      .filter-bar {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 0.75rem;
+        margin-bottom: 1.5rem;
+      }
+
+      .filter-search {
+        flex: 1 1 220px;
+        background: var(--panel);
+        border: 1px solid var(--panel-border);
+        border-radius: 5px;
+        padding: 0.5rem 0.75rem;
+        color: var(--text);
+        font-family: var(--font-mono);
+        font-size: 0.8125rem;
+      }
+
+      .filter-search::placeholder {
+        color: var(--text-dim);
+      }
+
+      .filter-search:focus-visible {
+        outline: 2px solid var(--accent);
+        outline-offset: -1px;
+      }
+
+      .status-filters {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+      }
+
+      .status-chip {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.45em;
+        font-family: var(--font-mono);
+        font-size: 0.75rem;
+        color: var(--text-muted);
+        background: transparent;
+        border: 1px solid var(--panel-border);
+        border-radius: 20px;
+        padding: 0.35rem 0.75rem;
+        cursor: pointer;
+        transition:
+          border-color 0.15s ease,
+          color 0.15s ease,
+          background 0.15s ease;
+      }
+
+      .status-chip:hover {
+        border-color: var(--text-dim);
+        color: var(--text);
+      }
+
+      .status-chip:focus-visible {
+        outline: 2px solid var(--accent);
+        outline-offset: 1px;
+      }
+
+      .status-chip[aria-pressed="true"][data-status="processing"] {
+        border-color: var(--accent);
+        background: var(--accent-dim);
+        color: var(--accent);
+      }
+
+      .status-chip[aria-pressed="true"][data-status="complete"] {
+        border-color: var(--done);
+        background: var(--done-dim);
+        color: var(--done);
+      }
+
+      .status-chip[aria-pressed="true"][data-status="pending"] {
+        border-color: var(--pending);
+        background: var(--pending-dim);
+        color: var(--pending);
+      }
+
       .stat-strip {
         display: flex;
         flex-wrap: wrap;
@@ -127,15 +209,20 @@ SPDX-License-Identifier: GPL-3.0-or-later
         background: var(--pending);
       }
 
-      /* ---------- empty state ---------- */
+      /* ---------- empty states ---------- */
 
-      .empty-state {
+      .empty-state,
+      .no-results {
         border: 1px dashed var(--panel-border);
         border-radius: 6px;
         padding: 2.5rem 1.5rem;
         text-align: center;
         color: var(--text-muted);
         font-size: 0.9375rem;
+      }
+
+      .no-results[hidden] {
+        display: none;
       }
 
       /* ---------- wiki panel ---------- */
@@ -146,6 +233,10 @@ SPDX-License-Identifier: GPL-3.0-or-later
         border-radius: 6px;
         background: var(--panel);
         overflow: hidden;
+      }
+
+      .wiki[hidden] {
+        display: none;
       }
 
       .wiki-head {
@@ -237,6 +328,10 @@ SPDX-License-Identifier: GPL-3.0-or-later
         font-family: var(--font-mono);
         font-size: 0.75rem;
         color: var(--text-dim);
+      }
+
+      .older-row-label a {
+        color: var(--text-muted);
       }
 
       .older-row-label .badge {
@@ -481,6 +576,27 @@ SPDX-License-Identifier: GPL-3.0-or-later
       if wiki_known_total > wiki.dumps|length else 0 %} {% set ns.total = ns.total +
       wiki_older_count %} {% set ns.complete = ns.complete + wiki_older_count %} {% endfor %}
 
+      <div class="filter-bar">
+        <input
+          type="search"
+          id="wiki-search"
+          class="filter-search"
+          placeholder="Filter by wiki name or code&hellip;"
+          aria-label="Filter by wiki name or code"
+        />
+        <div class="status-filters" role="group" aria-label="Filter by dump status">
+          <button type="button" class="status-chip" data-status="processing" aria-pressed="false">
+            <span class="stat-dot processing"></span>Processing
+          </button>
+          <button type="button" class="status-chip" data-status="complete" aria-pressed="false">
+            <span class="stat-dot complete"></span>Complete
+          </button>
+          <button type="button" class="status-chip" data-status="pending" aria-pressed="false">
+            <span class="stat-dot pending"></span>Queued
+          </button>
+        </div>
+      </div>
+
       <div class="stat-strip">
         <span
           >{{ wikis|length }} wiki{{ 's' if wikis|length != 1 else '' }}, {{ ns.total }} dump{{ 's'
@@ -499,14 +615,23 @@ SPDX-License-Identifier: GPL-3.0-or-later
         {% endif %}
       </div>
 
-      {% for wiki in wikis %} {% set wiki_open = wiki.dumps|selectattr('status', 'ne',
-      'complete')|list|length > 0 %} {# total_dumps is the true count on disk; wiki.dumps only holds
-      the ones sent to render. anything beyond that is older and wasn't included. #} {% set
-      known_total = wiki.total_dumps if wiki.total_dumps is defined and wiki.total_dumps is not none
-      else wiki.dumps|length %} {% set older_count = known_total - wiki.dumps|length if known_total
-      > wiki.dumps|length else 0 %}
+      {% for wiki in wikis %} {# total_dumps is the true count on disk; wiki.dumps only holds the
+      ones sent to render. anything beyond that is older and wasn't included, and is assumed
+      complete. #} {% set known_total = wiki.total_dumps if wiki.total_dumps is defined and
+      wiki.total_dumps is not none else wiki.dumps|length %} {% set older_count = known_total -
+      wiki.dumps|length if known_total > wiki.dumps|length else 0 %} {% set has_processing =
+      wiki.dumps|selectattr('status', 'equalto', 'processing')|list|length > 0 %} {% set has_pending
+      = wiki.dumps|selectattr('status', 'equalto', 'pending')|list|length > 0 %} {% set has_complete
+      = (wiki.dumps|selectattr('status', 'equalto', 'complete')|list|length > 0) or (older_count >
+      0) %}
 
-      <details class="wiki">
+      <details
+        class="wiki"
+        data-wiki-name="{{ (wiki.name ~ ' ' ~ (wiki.code or ''))|lower }}"
+        data-has-processing="{{ 'true' if has_processing else 'false' }}"
+        data-has-complete="{{ 'true' if has_complete else 'false' }}"
+        data-has-pending="{{ 'true' if has_pending else 'false' }}"
+      >
         <summary class="wiki-head">
           <span class="wiki-head-left">
             <svg class="chevron" viewBox="0 0 16 16" fill="none" aria-hidden="true">
@@ -544,11 +669,74 @@ SPDX-License-Identifier: GPL-3.0-or-later
         </div>
         {% endif %}
       </details>
-      {% endfor %} {% else %}
+      {% endfor %}
+
+      <div class="no-results" id="no-results" hidden>No wikis match the current filters.</div>
+
+      {% else %}
       <div class="empty-state">
         No wikis discovered yet. Once the crawler finds dump sources, they'll show up here.
       </div>
       {% endif %}
     </div>
+
+    <script>
+      (function () {
+        var searchInput = document.getElementById("wiki-search");
+        var chips = document.querySelectorAll(".status-chip");
+        var wikis = document.querySelectorAll(".wiki");
+        var noResults = document.getElementById("no-results");
+
+        if (!searchInput || !wikis.length) return;
+
+        function activeStatuses() {
+          return Array.prototype.filter
+            .call(chips, function (chip) {
+              return chip.getAttribute("aria-pressed") === "true";
+            })
+            .map(function (chip) {
+              return chip.dataset.status;
+            });
+        }
+
+        function capitalize(s) {
+          return s.charAt(0).toUpperCase() + s.slice(1);
+        }
+
+        function applyFilters() {
+          var term = searchInput.value.trim().toLowerCase();
+          var statuses = activeStatuses();
+          var visibleCount = 0;
+          var filtering = Boolean(term) || statuses.length > 0;
+
+          wikis.forEach(function (wiki) {
+            var nameMatch = !term || wiki.dataset.wikiName.indexOf(term) !== -1;
+            var statusMatch =
+              statuses.length === 0 ||
+              statuses.some(function (status) {
+                return wiki.dataset["has" + capitalize(status)] === "true";
+              });
+            var isMatch = nameMatch && statusMatch;
+
+            wiki.hidden = !isMatch;
+            if (isMatch) {
+              visibleCount += 1;
+              if (filtering) wiki.open = true;
+            }
+          });
+
+          if (noResults) noResults.hidden = visibleCount !== 0;
+        }
+
+        searchInput.addEventListener("input", applyFilters);
+        chips.forEach(function (chip) {
+          chip.addEventListener("click", function () {
+            var pressed = chip.getAttribute("aria-pressed") === "true";
+            chip.setAttribute("aria-pressed", String(!pressed));
+            applyFilters();
+          });
+        });
+      })();
+    </script>
   </body>
 </html>
