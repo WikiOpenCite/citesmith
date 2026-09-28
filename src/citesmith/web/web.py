@@ -1,3 +1,6 @@
+# SPDX-FileCopyrightText: 2026 The University of St Andrews
+# SPDX-License-Identifier: GPL-3.0-or-later
+
 from datetime import datetime, timezone
 
 from flask import Flask, render_template

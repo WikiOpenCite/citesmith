@@ -1,3 +1,6 @@
+# SPDX-FileCopyrightText: 2026 The University of St Andrews
+# SPDX-License-Identifier: GPL-3.0-or-later
+
 from dataclasses import dataclass
 from enum import Enum
 from typing import Any
