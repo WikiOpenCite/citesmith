@@ -2,6 +2,7 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 
 from datetime import datetime, timezone
+import sys
 
 from flask import Flask, render_template
 
@@ -11,7 +12,7 @@ from citesmith.config import manager as config_manager
 
 app = Flask(__name__)
 
-if not is_pool_initialized():
+if "gunicorn" in sys.argv[0] and not is_pool_initialized():
     db = config_manager.config.database
 
     create_pool(build_from_config(config_manager.config.database))  # type: ignore
