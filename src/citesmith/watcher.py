@@ -61,7 +61,7 @@ def _list_workers() -> list[int]:
     with get_pool().acquire() as conn:  # type: ignore
         with conn.cursor() as cursor:  # type: ignore
             cursor.execute("SELECT WorkerId FROM Worker")  # type: ignore
-            workers: list[int] = [row[0] for row in cursor.fetchall()]  # type: ignore
+            workers: list[int] = [row[0] for row in cursor.fetchall() if row[0] != -1]  # type: ignore
             conn.commit()  # type: ignore
 
     return workers
