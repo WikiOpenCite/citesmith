@@ -67,6 +67,10 @@ def _get_dumps():
 
     for dump in dumps:
         wiki, date, ready_for_combining, processing_complete, published, percent_complete, dump_count = dump  # type: ignore
+        if date in ["2026-07-01", "2026-08-01"]:
+            # Manual fix for the fact we aren't processing these dumps
+            # but they are in the DB.
+            continue
 
         if published:
             status = "complete"
