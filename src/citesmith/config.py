@@ -93,6 +93,11 @@ class ConfigManager:
 
     def __init__(self) -> None:
         self.lookup_paths = ["./", "/etc/citesmith/"]
+
+        tool_data_dir = os.environ.get("TOOL_DATA_DIR")
+        if tool_data_dir:
+            self.lookup_paths.insert(0, tool_data_dir)
+
         self._config: Config | None = None
         self._path: str | None = None
 
