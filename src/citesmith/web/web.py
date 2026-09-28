@@ -80,9 +80,7 @@ def _get_dumps():
             counts[wiki] = dump_count
 
         if status == "complete":
-            download_url = (
-                f"{config_manager.config.web.static_base_url}/dumps/{wiki}/{date}"
-            )
+            download_url = f"{config_manager.config.web.static_base_url}/{wiki}/{date}"
         else:
             download_url = None
 
