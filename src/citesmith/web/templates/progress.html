@@ -506,7 +506,7 @@ SPDX-License-Identifier: GPL-3.0-or-later
       else wiki.dumps|length %} {% set older_count = known_total - wiki.dumps|length if known_total
       > wiki.dumps|length else 0 %}
 
-      <details class="wiki" {% if wiki_open %} open{% endif %}>
+      <details class="wiki">
         <summary class="wiki-head">
           <span class="wiki-head-left">
             <svg class="chevron" viewBox="0 0 16 16" fill="none" aria-hidden="true">
