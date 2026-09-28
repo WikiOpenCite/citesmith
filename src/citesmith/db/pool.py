@@ -15,6 +15,11 @@ _logger = logging.getLogger(__name__)
 __pool: Optional[mariadb_pool.pool.ConnectionPool] = None
 
 
+def is_pool_initialized() -> bool:
+    """Check if the database connection pool has been initialized."""
+    return __pool is not None
+
+
 def get_pool() -> mariadb_pool.pool.ConnectionPool:
 
     if __pool is None:

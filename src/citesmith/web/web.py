@@ -5,10 +5,16 @@ from datetime import datetime, timezone
 
 from flask import Flask, render_template
 
-from citesmith.db.pool import get_pool
+from citesmith.db.pool import get_pool, is_pool_initialized, create_pool
+from citesmith.db._database import build_from_config
 from citesmith.config import manager as config_manager
 
 app = Flask(__name__)
+
+if not is_pool_initialized():
+    db = config_manager.config.database
+
+    create_pool(build_from_config(config_manager.config.database))  # type: ignore
 
 
 def _get_dumps():
