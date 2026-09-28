@@ -11,7 +11,7 @@ from tabulate import tabulate
 from citesmith.config import manager, ConfigError
 from citesmith.db.migrate import apply_migrations
 from citesmith.db import build_from_config
-from citesmith.db.pool import create_pool, get_pool
+from citesmith.db.pool import close_pool, create_pool, get_pool
 from citesmith.publisher import run_publisher, run_publisher_singleshot
 from citesmith.watcher import run_watcher_singleshot
 from citesmith.processor import run_processor_singleshot, run_processor
@@ -62,6 +62,12 @@ def cli(config: click.Path, log_level: str):
             raise click.ClickException(str(e)) from e
 
         create_pool(build_from_config(manager.config.database))
+
+
+@cli.result_callback()
+def callback(*args, **kwargs):
+    """Callback function to handle any cleanup or finalization after command execution."""
+    close_pool()  # Close the database connection pool after command execution
 
 
 @cli.command()

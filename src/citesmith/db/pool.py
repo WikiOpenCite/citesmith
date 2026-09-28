@@ -52,3 +52,15 @@ def create_pool(db: MariaDBDatabase) -> None:
         raise DBConnectionError(f"Failed to create MariaDB connection pool: {e}") from e
 
     _logger.debug("Created connection pool")
+
+
+def close_pool() -> None:
+    global __pool  # pylint: disable=global-statement
+
+    if __pool is None:
+        raise DBStateError("Database pool has not been initialized.")
+
+    _logger.debug("Closing database connection pool")
+    __pool.close()
+    __pool = None
+    _logger.debug("Closed connection pool")
