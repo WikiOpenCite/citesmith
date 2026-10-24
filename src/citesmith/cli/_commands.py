@@ -12,10 +12,7 @@ from citesmith.config import manager, ConfigError
 from citesmith.db.migrate import apply_migrations
 from citesmith.db import build_from_config
 from citesmith.db.pool import close_pool, create_pool, get_pool
-from citesmith.publisher import run_publisher, run_publisher_singleshot
-from citesmith.watcher import run_watcher_singleshot
-from citesmith.processor import run_processor_singleshot, run_processor
-from citesmith.combiner import run_combiner_singleshot, run_combiner
+from citesmith import dumps
 from citesmith.web.web import app
 
 
@@ -65,7 +62,7 @@ def cli(config: click.Path, log_level: str):
 
 
 @cli.result_callback()
-def callback(*args, **kwargs):
+def callback(*args, **kwargs):  # type: ignore
     """Callback function to handle any cleanup or finalization after command execution."""
     close_pool()  # Close the database connection pool after command execution
 
@@ -84,7 +81,7 @@ def watch():
     The watcher should typically be run by a cron job or similar, and
     will check for new data to process.
     """
-    run_watcher_singleshot()
+    dumps.run_watcher_singleshot()
 
 
 @cli.command()
@@ -107,9 +104,9 @@ def process(worker_id: int, singleshot: bool):
     """
 
     if singleshot:
-        run_processor_singleshot(worker_id)
+        dumps.run_processor_singleshot(worker_id)
     else:
-        run_processor(worker_id)
+        dumps.run_processor(worker_id)
 
 
 @cli.command()
@@ -125,9 +122,9 @@ def combine(singleshot: bool):
     """
 
     if singleshot:
-        run_combiner_singleshot()
+        dumps.run_combiner_singleshot()
     else:
-        run_combiner()
+        dumps.run_combiner()
 
 
 @cli.command()
@@ -140,9 +137,9 @@ def publish(singleshot: bool):
     """Publish the combined data to the configured output location"""
 
     if singleshot:
-        run_publisher_singleshot()
+        dumps.run_publisher_singleshot()
     else:
-        run_publisher()
+        dumps.run_publisher()
 
 
 @cli.command()
