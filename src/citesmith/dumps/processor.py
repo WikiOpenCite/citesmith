@@ -1,6 +1,7 @@
 # SPDX-FileCopyrightText: 2026 The University of St Andrews
 # SPDX-License-Identifier: GPL-3.0-or-later
 
+import random
 from time import sleep
 import logging
 from dataclasses import dataclass
@@ -23,6 +24,8 @@ _logger = logging.getLogger(__name__)
 
 
 def _get_next_file(worker_id: int) -> _File | None:
+    # Random offset to avoid getting stuck on an error file.
+    offset = random.randint(0, 100)
     sql = """ 
           SELECT FileId,
                 Path,
@@ -31,12 +34,13 @@ def _get_next_file(worker_id: int) -> _File | None:
           FROM   File
           WHERE  Complete = FALSE
                 AND Worker = ?
-          LIMIT  1;
+          LIMIT  1
+          OFFSET ?;
           """
 
     with get_pool().acquire() as conn:  # type: ignore
         with conn.cursor() as cursor:  # type: ignore
-            cursor.execute(sql, (worker_id,))  # type: ignore
+            cursor.execute(sql, (worker_id, offset))  # type: ignore
             file = cursor.fetchone()  # type: ignore
 
     if file is None:
