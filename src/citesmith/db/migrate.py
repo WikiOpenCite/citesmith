@@ -23,6 +23,7 @@ logger = logging.getLogger(__name__)
 _migrations = [
     "20260813_initial_database",
     "20260924_published_status",
+    "20261024_openalex_processing",
 ]
 
 

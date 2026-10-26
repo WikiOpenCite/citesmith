@@ -13,6 +13,7 @@ from citesmith.db.migrate import apply_migrations
 from citesmith.db import build_from_config
 from citesmith.db.pool import close_pool, create_pool, get_pool
 from citesmith import dumps
+from citesmith import openalex
 from citesmith.web.web import app
 
 
@@ -74,7 +75,12 @@ def migrate():
     click.echo("Migrations complete")
 
 
-@cli.command()
+@cli.group()
+def dump():
+    """Manage dump processing and publishing"""
+
+
+@dump.command()
 def watch():
     """Run the watcher
 
@@ -84,7 +90,7 @@ def watch():
     dumps.run_watcher_singleshot()
 
 
-@cli.command()
+@dump.command()
 @click.option(
     "--worker-id",
     "-i",
@@ -94,7 +100,7 @@ def watch():
 @click.option(
     "--singleshot",
     type=bool,
-    help="ID of worker to process files for.",
+    help="Run the processor in singleshot mode, processing all available files and then exiting.",
 )
 def process(worker_id: int, singleshot: bool):
     """Process new dump files
@@ -109,11 +115,11 @@ def process(worker_id: int, singleshot: bool):
         dumps.run_processor(worker_id)
 
 
-@cli.command()
+@dump.command()
 @click.option(
     "--singleshot",
     type=bool,
-    help="ID of worker to process files for.",
+    help="Run the combiner in singleshot mode, processing all available files and then exiting.",
 )
 def combine(singleshot: bool):
     """Combines all files for a given dump when processing is complete
@@ -127,11 +133,11 @@ def combine(singleshot: bool):
         dumps.run_combiner()
 
 
-@cli.command()
+@dump.command()
 @click.option(
     "--singleshot",
     type=bool,
-    help="ID of worker to process files for.",
+    help="Run the publisher in singleshot mode, processing all available files and then exiting.",
 )
 def publish(singleshot: bool):
     """Publish the combined data to the configured output location"""
@@ -149,6 +155,45 @@ def serve(host: str, port: int):
     """Start the development web interface for citesmith"""
 
     app.run(host=host, port=port)
+
+
+@cli.group(name="openalex")
+def openalex_cli():
+    """Manage OpenAlex data processing"""
+
+
+@openalex_cli.command(name="watch")
+def openalex_watch():
+    """Run the OpenAlex watcher"""
+    openalex.run_watcher_singleshot()
+
+
+@openalex_cli.command(name="process")
+@click.option(
+    "--singleshot",
+    type=bool,
+    help="Run the processor in singleshot mode, processing all available files and then exiting.",
+)
+def openalex_process(singleshot: bool):
+    """Process new OpenAlex files"""
+    if singleshot:
+        openalex.run_processor_singleshot()
+    else:
+        openalex.run_processor()
+
+
+@openalex_cli.command(name="combine")
+@click.option(
+    "--singleshot",
+    type=bool,
+    help="Run the combiner in singleshot mode, processing all available files and then exiting.",
+)
+def openalex_combine(singleshot: bool):
+    """Combine OpenAlex files"""
+    if singleshot:
+        openalex.run_combiner_singleshot()
+    else:
+        openalex.run_combiner()
 
 
 @cli.group()

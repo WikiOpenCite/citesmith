@@ -47,6 +47,7 @@ class WorkerConfig(BaseModel):
 
     sleep_time: int = 60  # in seconds
     out_base_dir: DirectoryPath
+    openalex_out_dir: DirectoryPath
     citescoop_path: str
 
 
