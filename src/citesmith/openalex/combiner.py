@@ -133,6 +133,22 @@ def _get_previous_combined_files(
     )
 
 
+def _move_to_output(date: str) -> None:
+    root_path = config_manager.config.worker.openalex_out_dir
+    output_dir = config_manager.config.web.openalex_path / Path(date)
+    output_dir.mkdir(parents=True, exist_ok=True)
+
+    for file_type in ["works", "authors", "institutions"]:
+        src_path = root_path / Path(f"{date}.{file_type}.pbf")
+        dst_path = output_dir / Path(f"{date}.{file_type}.pbf")
+
+        if src_path.exists():
+            _logger.debug("Moving %s to %s", src_path, dst_path)
+            copy2(src_path, dst_path)
+        else:
+            _logger.warning("Source file %s does not exist, skipping move.", src_path)
+
+
 def _combine_dump(date: str):
     works_files, author_files, institution_files = _get_dump_files(date)
 
@@ -176,19 +192,7 @@ def _combine_dump(date: str):
         _remove_if_exists([output_institutions])
         return
 
-    copy2(
-        output_works,
-        config_manager.config.web.openalex_path / Path(f"{date}.works.pbf"),
-    )
-    copy2(
-        output_authors,
-        config_manager.config.web.openalex_path / Path(f"{date}.authors.pbf"),
-    )
-    copy2(
-        output_institutions,
-        config_manager.config.web.openalex_path / Path(f"{date}.institutions.pbf"),
-    )
-
+    _move_to_output(date)
     _mark_dump_combined(date)
 
 
