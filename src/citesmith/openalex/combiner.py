@@ -178,15 +178,15 @@ def _combine_dump(date: str):
 
     copy2(
         output_works,
-        config_manager.config.worker.out_base_dir / Path(f"{date}.works.pbf"),
+        config_manager.config.web.openalex_path / Path(f"{date}.works.pbf"),
     )
     copy2(
         output_authors,
-        config_manager.config.worker.out_base_dir / Path(f"{date}.authors.pbf"),
+        config_manager.config.web.openalex_path / Path(f"{date}.authors.pbf"),
     )
     copy2(
         output_institutions,
-        config_manager.config.worker.out_base_dir / Path(f"{date}.institutions.pbf"),
+        config_manager.config.web.openalex_path / Path(f"{date}.institutions.pbf"),
     )
 
     _mark_dump_combined(date)

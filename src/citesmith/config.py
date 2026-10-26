@@ -55,6 +55,7 @@ class WebConfig(BaseModel):
     """Pydantic model for web config"""
 
     dump_path: DirectoryPath
+    openalex_path: DirectoryPath
     static_base_url: str
 
 
