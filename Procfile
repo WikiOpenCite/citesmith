@@ -4,6 +4,6 @@ process: python3 -m citesmith --log-level INFO dump process
 combine: python3 -m citesmith --log-level INFO dump combine
 publish: python3 -m citesmith --log-level INFO dump publish
 watch: python3 -m citesmith --log-level INFO dump watch
-openalex_watch: python3 -m citesmith --log-level INFO openalex watch
-openalex_process: python3 -m citesmith --log-level INFO openalex process
-openalex_combine: python3 -m citesmith --log-level INFO openalex combine
+openalex-watch: python3 -m citesmith --log-level INFO openalex watch
+openalex-process: python3 -m citesmith --log-level INFO openalex process
+openalex-combine: python3 -m citesmith --log-level INFO openalex combine
