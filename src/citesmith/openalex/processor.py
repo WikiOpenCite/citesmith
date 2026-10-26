@@ -1,3 +1,4 @@
+from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass
 import gzip
 import logging
@@ -47,19 +48,31 @@ def _get_s3_bucket_and_key(file_url: str) -> tuple[str, str]:
     return bucket, key
 
 
-def _get_next_file():
+def _get_next_file(exclude_ids: tuple[int, ...] = ()):
+    # Base query
     sql = """ 
           SELECT FileId,
                 Path,
                 DumpDate
           FROM   OpenAlexFile
           WHERE  Complete = FALSE
-          LIMIT  1;
           """
+
+    # Dynamically inject exclusion logic if active tasks exist
+    params = []
+    if exclude_ids:
+        # Generates a string placeholder like "?, ?, ?" for MariaDB parameter binding
+        placeholders = ", ".join(["?"] * len(exclude_ids))
+        sql += f" AND FileId NOT IN ({placeholders})\n"
+        params.extend(exclude_ids)
+
+    sql += " LIMIT 1;"
 
     with get_pool().acquire() as conn:  # type: ignore
         with conn.cursor() as cursor:  # type: ignore
-            cursor.execute(sql)  # type: ignore
+            # Pass parameters to execute safely to prevent SQL injection
+            # MariaDB client expects a tuple or list for positional arguments
+            cursor.execute(sql, params if params else None)  # type: ignore
             file = cursor.fetchone()  # type: ignore
 
     if file is None:
@@ -291,17 +304,62 @@ def run_processor_singleshot():
     )
     rate_limit_bytes = 8 * 1024 * 1024
     chunk_size = 1024 * 1024
-    while file := _get_next_file():
-        _logger.info("Processing file %d: %s", file.file_id, file.path)
-        _process_one_file(
-            file.path,
-            config_manager.config.worker.citescoop_path,
-            config_manager.config.worker.openalex_out_dir,
-            s3,
-            rate_limit_bytes,
-            chunk_size,
-        )
-        _mark_file_complete(file)
+    active_file_ids = set()
+
+    with ThreadPoolExecutor(
+        max_workers=config_manager.config.worker.max_parallel
+    ) as executor:
+
+        def handle_done(future):
+            file_entry = future.file_entry
+            try:
+                future.result()
+                _mark_file_complete(file_entry)
+            except Exception as e:
+                _logger.error(
+                    "Failed to process file %d (%s): %s",
+                    file_entry.file_id,
+                    file_entry.path,
+                    e,
+                )
+            finally:
+                active_file_ids.remove(file_entry.file_id)
+
+        while True:
+            # Throttle: Don't pull more if our queue/worker slots are completely full
+            if len(active_file_ids) >= config_manager.config.worker.max_parallel:
+                time.sleep(0.05)
+                continue
+
+            # FIX: Pass active IDs down to the DB query so it skips them and finds the *next* available file
+            file = _get_next_file(exclude_ids=tuple(active_file_ids))
+
+            if not file:
+                # If there are no files left outside of what is currently processing,
+                # we must wait for active threads to finish before breaking.
+                if active_file_ids:
+                    time.sleep(0.1)
+                    continue
+                else:
+                    break
+
+            _logger.info("Processing file %d: %s", file.file_id, file.path)
+            active_file_ids.add(file.file_id)
+
+            future = executor.submit(
+                _process_one_file,
+                file.path,
+                config_manager.config.worker.citescoop_path,
+                config_manager.config.worker.openalex_out_dir,
+                s3,
+                rate_limit_bytes,
+                chunk_size,
+            )
+
+            future.file_entry = file
+            future.add_done_callback(handle_done)
+
+    _logger.info("Finished processing all files")
 
 
 def run_processor():
